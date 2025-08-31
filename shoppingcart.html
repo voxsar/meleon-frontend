@@ -1305,37 +1305,17 @@
                                     <li class="text2"><a href="#">SUB TOTAL</a></li>
                                 </ul>
 
-                                <ul class="nav-mid clearfix">
-                                    <li class="image"><a href="#"><img src="images/placehoder.jpg" alt=""></a></li>
-                                    <li class="item-title"><a href="#">Modular Modern</a></li>
-                                    <li class="icon1"><i class="btn-edit fa fa-edit"></i></li>
-                                    <li class="price1">$659.00</li>
-                                    <li class="number"><a href="#">1</a></li>
-                                    <li class="price2">$659.00</li>
-                                    <li class="icon2"><i class="btn-remove fa fa-remove"></i></li>
-                                </ul>
-                                <ul class="nav-mid clearfix">
-                                    <li class="image"><a href="#"><img src="images/placehoder.jpg" alt=""></a></li>
-                                    <li class="item-title"><a href="#">Modular Modern</a></li>
-                                    <li class="icon1"><i class="btn-edit fa fa-edit"></i></li>
-                                    <li class="price1">$659.00</li>
-                                    <li class="number"><a href="#">1</a></li>
-                                    <li class="price2">$659.00</li>
-                                    <li class="icon2"><i class="btn-remove fa fa-remove"></i></li>
-                                </ul>
-                                <ul class="nav-mid clearfix">
-                                    <li class="image"><a href="#"><img src="images/placehoder.jpg" alt=""></a></li>
-                                    <li class="item-title"><a href="#">Modular Modern</a></li>
-                                    <li class="icon1"><i class="btn-edit fa fa-edit"></i></li>
-                                    <li class="price1">$659.00</li>
-                                    <li class="number"><a href="#">1</a></li>
-                                    <li class="price2">$659.00</li>
-                                    <li class="icon2"><i class="btn-remove fa fa-remove"></i></li>
-                                </ul>
-                                 <ul class="nav-bot clearfix">
-                                    <li class="continue"><a href="#">Continue shopping</a></li>
-                                    <li class="clear"><a href="#">clear shopping cart</a></li>
-                                    <li class="update"><a href="#">update shopping cart</a></li>
+                                <!-- Dynamic cart items will be loaded here -->
+                                <div id="cart-items-container">
+                                    <div class="cart-loading" style="text-align: center; padding: 20px;">
+                                        <p>Loading cart items...</p>
+                                    </div>
+                                </div>
+
+                                <ul class="nav-bot clearfix">
+                                    <li class="continue"><a href="index.html">Continue shopping</a></li>
+                                    <li class="clear"><a href="#" onclick="clearCart()">clear shopping cart</a></li>
+                                    <li class="update"><a href="#" onclick="updateCartDisplay()">update shopping cart</a></li>
                                 </ul>
                                 <div class="row">
                                     <form class="col-md-4">
@@ -1387,13 +1367,13 @@
                                         <div class="form-bd">
                                             <p class="subtotal">
                                                 <span class="text1">SUBTOTAL:</span>
-                                                <span class="text2">$1,794.00</span>
+                                                <span class="text2" id="cart-subtotal">$0.00</span>
                                             </p>
                                             <h3>
                                                 <span class="text3">GRAND TOTAL:</span>
-                                                <span class="text4">$1,794.00</span>
+                                                <span class="text4" id="cart-total">$0.00</span>
                                             </h3>
-                                            <span class="style-bd">Proceed to checkout</span>
+                                            <span class="style-bd" onclick="proceedToCheckout()">Proceed to checkout</span>
                                             <p class="checkout">Checkout with Multiple Addresses</p>
                                         </div>
                                     </form>
@@ -1598,5 +1578,12 @@
         <script src="js/owl-carousel/owl.carousel.min.js"></script>
         <script src="js/sns-extend.js"></script>
         <script src="js/custom.js"></script>
+        <script src="js/medusa-integration.js"></script>
+        <script>
+            // Initialize cart page when DOM is loaded
+            document.addEventListener('DOMContentLoaded', function() {
+                loadCartPage();
+            });
+        </script>
 	</body>
 </html>

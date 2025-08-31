@@ -449,3 +449,122 @@ function setupSearch() {
     });
   }
 }
+
+// Cart page specific functions
+function loadCartPage() {
+    updateCartDisplay();
+}
+
+function renderCartItems(cart) {
+    const container = document.getElementById('cart-items-container');
+    if (!container) return;
+
+    if (!cart || !cart.items || cart.items.length === 0) {
+        container.innerHTML = `
+            <div class="empty-cart" style="text-align: center; padding: 40px;">
+                <p>Your cart is empty</p>
+                <a href="index.html" class="btn btn-primary">Continue Shopping</a>
+            </div>
+        `;
+        updateCartTotals(null);
+        return;
+    }
+
+    const itemsHTML = cart.items.map(item => `
+        <ul class="nav-mid clearfix" data-item-id="${item.id}">
+            <li class="image">
+                <a href="detail.html?id=${item.variant?.product_id || item.product_id}">
+                    <img src="${item.variant?.product?.thumbnail || item.thumbnail || 'images/placehoder.jpg'}" alt="${item.title}">
+                </a>
+            </li>
+            <li class="item-title">
+                <a href="detail.html?id=${item.variant?.product_id || item.product_id}">${item.title}</a>
+            </li>
+            <li class="icon1">
+                <i class="btn-edit fa fa-edit" onclick="editCartItem('${item.id}')"></i>
+            </li>
+            <li class="price1">${formatPrice({ amount: item.unit_price, currency_code: MEDUSA_CONFIG.currency })}</li>
+            <li class="number">
+                <input type="number" value="${item.quantity}" min="1" 
+                       onchange="updateCartItemQuantity('${item.id}', this.value)" 
+                       style="width: 60px; text-align: center;">
+            </li>
+            <li class="price2">${formatPrice({ amount: item.total, currency_code: MEDUSA_CONFIG.currency })}</li>
+            <li class="icon2">
+                <i class="btn-remove fa fa-remove" onclick="removeFromCart('${item.id}')"></i>
+            </li>
+        </ul>
+    `).join('');
+
+    container.innerHTML = itemsHTML;
+    updateCartTotals(cart);
+}
+
+function updateCartTotals(cart) {
+    const subtotalElement = document.getElementById('cart-subtotal');
+    const totalElement = document.getElementById('cart-total');
+    
+    if (!cart || !cart.items || cart.items.length === 0) {
+        if (subtotalElement) subtotalElement.textContent = '$0.00';
+        if (totalElement) totalElement.textContent = '$0.00';
+        return;
+    }
+
+    const subtotal = cart.subtotal || 0;
+    const total = cart.total || subtotal;
+
+    if (subtotalElement) subtotalElement.textContent = formatPrice({ amount: subtotal, currency_code: MEDUSA_CONFIG.currency });
+    if (totalElement) totalElement.textContent = formatPrice({ amount: total, currency_code: MEDUSA_CONFIG.currency });
+}
+
+function updateCartItemQuantity(itemId, quantity) {
+    quantity = parseInt(quantity);
+    if (quantity < 1) {
+        removeFromCart(itemId);
+        return;
+    }
+
+    updateCartItem(itemId, { quantity });
+}
+
+function editCartItem(itemId) {
+    // For now, just focus on quantity input
+    const itemElement = document.querySelector(`[data-item-id="${itemId}"] input[type="number"]`);
+    if (itemElement) {
+        itemElement.focus();
+        itemElement.select();
+    }
+}
+
+function clearCart() {
+    if (confirm('Are you sure you want to clear your shopping cart?')) {
+        // Clear the entire cart
+        const cart = getCart();
+        if (cart && cart.items) {
+            cart.items.forEach(item => {
+                removeFromCart(item.id);
+            });
+        }
+        
+        // Also clear localStorage
+        localStorage.removeItem('cart');
+        updateCartDisplay();
+    }
+}
+
+function proceedToCheckout() {
+    const cart = getCart();
+    if (!cart || !cart.items || cart.items.length === 0) {
+        alert('Your cart is empty. Please add items before proceeding to checkout.');
+        return;
+    }
+    
+    // For now, redirect to a checkout page (to be implemented)
+    window.location.href = 'checkout.html';
+}
+
+function updateCartDisplay() {
+    const cart = getCart();
+    renderCartItems(cart);
+    updateCartUI(); // Update the mini cart in header as well
+}
