@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medusa Configuration - Meleon</title>
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .config-container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 30px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-control {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 100%;
+        }
+        .btn {
+            padding: 10px 20px;
+            margin-right: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        .btn:hover {
+            opacity: 0.8;
+        }
+        .current-config {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .alert-info {
+            background-color: #d1ecf1;
+            border-color: #bee5eb;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <div class="config-container">
+        <h2>Medusa Configuration</h2>
+        <p>Configure your Medusa backend URL and publishable API key for the Meleon store.</p>
+        
+        <div class="current-config">
+            <h4>Current Configuration</h4>
+            <p><strong>Backend URL:</strong> <span id="current-backend">Not set</span></p>
+            <p><strong>Publishable API Key:</strong> <span id="current-key">Not set</span></p>
+        </div>
+
+        <div class="alert alert-info">
+            <strong>Note:</strong> Your publishable API key should start with "pk_" and can be found in your Medusa admin dashboard under Settings > Publishable API Keys.
+        </div>
+
+        <form id="config-form">
+            <div class="form-group">
+                <label for="backend-url">Medusa Backend URL:</label>
+                <input type="url" 
+                       id="backend-url" 
+                       class="form-control" 
+                       placeholder="https://your-medusa-backend.com"
+                       required>
+                <small>Example: https://admin.meleon.shop</small>
+            </div>
+
+            <div class="form-group">
+                <label for="publishable-key">Publishable API Key:</label>
+                <input type="text" 
+                       id="publishable-key" 
+                       class="form-control" 
+                       placeholder="pk_01..."
+                       required>
+                <small>Your publishable API key from Medusa admin</small>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">Save Configuration</button>
+                <button type="button" class="btn btn-secondary" onclick="testConnection()">Test Connection</button>
+                <a href="index.html" class="btn btn-secondary">Back to Store</a>
+            </div>
+        </form>
+
+        <div id="status-message" style="display: none;"></div>
+
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
+            <h4>Quick Setup Examples</h4>
+            <p>You can also configure via JavaScript console:</p>
+            <pre style="background: #f1f1f1; padding: 10px; border-radius: 4px; font-size: 12px;">
+// Set configuration
+MedusaConfig.configure(
+    'https://your-backend.com',
+    'pk_your_publishable_key'
+);
+
+// Or set individually
+MedusaConfig.setBackendUrl('https://your-backend.com');
+MedusaConfig.setPublishableKey('pk_your_key');
+            </pre>
+        </div>
+    </div>
+
+    <script src="js/medusa-integration.js"></script>
+    <script>
+        // Load current configuration
+        function loadCurrentConfig() {
+            const config = MedusaConfig.getCurrentConfig();
+            document.getElementById('current-backend').textContent = config.BACKEND_URL || 'Not set';
+            document.getElementById('current-key').textContent = config.PUBLISHABLE_API_KEY ? 
+                config.PUBLISHABLE_API_KEY.substring(0, 8) + '...' : 'Not set';
+            
+            // Pre-fill form with current values
+            document.getElementById('backend-url').value = config.BACKEND_URL || '';
+            document.getElementById('publishable-key').value = config.PUBLISHABLE_API_KEY || '';
+        }
+
+        // Show status message
+        function showMessage(message, type = 'success') {
+            const statusDiv = document.getElementById('status-message');
+            statusDiv.className = `alert alert-${type}`;
+            statusDiv.textContent = message;
+            statusDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // Test connection to Medusa backend
+        async function testConnection() {
+            const backendUrl = document.getElementById('backend-url').value.trim();
+            const publishableKey = document.getElementById('publishable-key').value.trim();
+            
+            if (!backendUrl || !publishableKey) {
+                showMessage('Please fill in both Backend URL and Publishable API Key', 'warning');
+                return;
+            }
+
+            try {
+                showMessage('Testing connection...', 'info');
+                
+                const response = await fetch(`${backendUrl}/store/regions`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-publishable-api-key': publishableKey
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showMessage(`✅ Connection successful! Found ${data.regions?.length || 0} regions.`, 'success');
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                showMessage(`❌ Connection failed: ${error.message}`, 'danger');
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('config-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const backendUrl = document.getElementById('backend-url').value.trim();
+            const publishableKey = document.getElementById('publishable-key').value.trim();
+            
+            if (!publishableKey.startsWith('pk_')) {
+                showMessage('⚠️ Publishable API key should start with "pk_"', 'warning');
+                return;
+            }
+
+            // Save configuration
+            MedusaConfig.configure(backendUrl, publishableKey);
+            
+            // Update display
+            loadCurrentConfig();
+            
+            showMessage('✅ Configuration saved successfully!', 'success');
+        });
+
+        // Load current config on page load
+        loadCurrentConfig();
+    </script>
+</body>
+</html>
